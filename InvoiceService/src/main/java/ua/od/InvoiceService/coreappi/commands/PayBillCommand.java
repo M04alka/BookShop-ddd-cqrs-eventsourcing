@@ -12,6 +12,7 @@ public class PayBillCommand {
     private final String userInvoice;
     private final String userLogin;
 
+
     private final Double totalPrice;
     private final String stateOfInvoice;
     private final String stateOfPurchase;

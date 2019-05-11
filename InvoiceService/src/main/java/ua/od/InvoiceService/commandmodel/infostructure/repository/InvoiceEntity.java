@@ -44,22 +44,27 @@ public class InvoiceEntity {
     }
 
     public void setId(Long id) {
+
         Id = id;
     }
 
     public String getUserLogin() {
+
         return userLogin;
     }
 
     public void setUserLogin(String userLogin) {
+
         this.userLogin = userLogin;
     }
 
     public Double getPrice() {
+
         return price;
     }
 
     public void setPrice(Double price) {
+
         this.price = price;
     }
 }

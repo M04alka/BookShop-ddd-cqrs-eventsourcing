@@ -5,8 +5,6 @@ import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.annotation.KafkaListener;
 import ua.od.InvoiceService.commandmodel.infostructure.helpers.MoneyChecker;
 import ua.od.InvoiceService.commandmodel.infostructure.helpers.TotalPriceDto;
 import ua.od.InvoiceService.commandmodel.infostructure.service.InvoiceService;
@@ -18,7 +16,7 @@ import ua.od.InvoiceService.coreappi.events.BillPayedEvent;
 import ua.od.InvoiceService.coreappi.events.InvoiceCreatedEvent;
 import ua.od.InvoiceService.coreappi.events.ItemAddedEvent;
 import ua.od.InvoiceService.coreappi.events.UserMoneyVerifiedEvent;
-import ua.od.InvoiceService.coreappi.states.StateOfInvoice;
+
 
 
 import java.util.ArrayList;
@@ -45,9 +43,6 @@ public class Invoice {
     @CommandHandler
     public Invoice(CreateInvoiceCommand command, InvoiceService invoiceService) {
 
-        if(invoiceService.getInvoice(command.getUserInvoice())!=null){
-            throw new IllegalStateException("This user already has invoice!");
-        }
         AggregateLifecycle.apply(
                 new InvoiceCreatedEvent(
                         command.getUserInvoice(),
@@ -64,6 +59,7 @@ public class Invoice {
 
     @EventSourcingHandler
     public void on(InvoiceCreatedEvent event){
+
         this.userInvoice = event.getUserInvoice();
         this.bookList = event.getBookList();
         this.totalPrice = event.getTotalPrice();
@@ -75,7 +71,11 @@ public class Invoice {
     //Coomand to add item to the Bill
 
     @CommandHandler
-    private void handle(AddItemtoInvoiceCommand command){
+    private void handle(AddItemtoInvoiceCommand command,InvoiceService invoiceService){
+
+        if(invoiceService.checkUserBooks(command.getUserLogin(),command.getBook())!=null){
+            throw new IllegalStateException("You alredy got this book!");
+        }
 
         AggregateLifecycle.apply(
                 new ItemAddedEvent(
@@ -122,8 +122,7 @@ public class Invoice {
     //Event to verify ammount of money
 
     @EventSourcingHandler
-    public void on(UserMoneyVerifiedEvent event)
-    {
+    public void on(UserMoneyVerifiedEvent event) {
 
         this.userInvoice = event.getUserInvoice();
         this.totalPrice = event.getTotalPrice();
@@ -139,12 +138,14 @@ public class Invoice {
         if(command.getVerification().equals(MoneyChecker.Decline.toString())) {
             throw new IllegalStateException("You don't have enought money!");
         }
-        System.out.println(this.stateOfPurchase);
+
         AggregateLifecycle.apply(
                 new BillPayedEvent(
                         command.getUserInvoice(),
                         command.getUserLogin(),
+                        this.bookList,
                         command.getTotalPrice(),
+                        command.getStateOfInvoice(),
                         command.getStateOfPurchase()
                 )
         );

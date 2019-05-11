@@ -8,8 +8,8 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
+import ua.od.InvoiceService.commandmodel.infostructure.UserLogedInEventDto;
 import ua.od.InvoiceService.commandmodel.infostructure.helpers.UserWalletVerificationDto;
-import ua.od.InvoiceService.coreappi.events.UserLogedInEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,8 +21,8 @@ public class KafkaConsumerConfigurations {
     //Consumer for UserLogedInEvent
 
     @Bean
-    public ConsumerFactory<String,  UserLogedInEvent> consumerUserLogedInEvent(){
-        JsonDeserializer< UserLogedInEvent> deserializer = new JsonDeserializer<>( UserLogedInEvent.class);
+    public ConsumerFactory<String, UserLogedInEventDto> consumerUserLogedInEvent(){
+        JsonDeserializer<UserLogedInEventDto> deserializer = new JsonDeserializer<>( UserLogedInEventDto.class);
         deserializer.setRemoveTypeHeaders(false);
         deserializer.addTrustedPackages("*");
         deserializer.setUseTypeMapperForKey(true);
@@ -35,8 +35,8 @@ public class KafkaConsumerConfigurations {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String,  UserLogedInEvent > kafkaListenerContainerFactory(){
-        ConcurrentKafkaListenerContainerFactory<String, UserLogedInEvent > factory = new ConcurrentKafkaListenerContainerFactory<String,  UserLogedInEvent >();
+    public ConcurrentKafkaListenerContainerFactory<String, UserLogedInEventDto> kafkaListenerContainerFactory(){
+        ConcurrentKafkaListenerContainerFactory<String, UserLogedInEventDto> factory = new ConcurrentKafkaListenerContainerFactory<String, UserLogedInEventDto>();
         factory.setConsumerFactory(consumerUserLogedInEvent());
         return factory;
     }

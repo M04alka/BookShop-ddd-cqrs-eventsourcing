@@ -13,13 +13,12 @@ import ua.od.InvoiceService.coreappi.commands.PayBillCommand;
 import ua.od.InvoiceService.coreappi.events.BillPayedEvent;
 import ua.od.InvoiceService.coreappi.events.InvoiceCreatedEvent;
 import ua.od.InvoiceService.coreappi.events.ItemAddedEvent;
-import ua.od.InvoiceService.coreappi.events.UserLogedInEvent;
 
 @Component
 public class InvoiceEventHandler {
 
-   @Autowired
-   InvoiceService invoiceService;
+    @Autowired
+    InvoiceService invoiceService;
 
     @Autowired
     private final CommandGateway commandGateway;
@@ -32,7 +31,11 @@ public class InvoiceEventHandler {
     //Listener that create an invoice for user when he login
 
     @KafkaListener(topics = "UserLogedIn", groupId = "Invoice", containerFactory = "kafkaListenerContainerFactory")
-    public void consume(UserLogedInEvent event){
+    public void consume(UserLogedInEventDto event){
+
+        if(invoiceService.getInvoice(event.getLogin())!=null){
+            throw new IllegalStateException("This user already has invoice!");
+        }
 
         String userInvoice = event.getLogin() + "Invoice";
         commandGateway.send(
@@ -87,6 +90,7 @@ public class InvoiceEventHandler {
     @EventHandler
     public void on(BillPayedEvent event){
 
+        invoiceService.orderList(event.getUserLogin(),event.getBookList());
         InvoiceEntity entity = invoiceService.getInvoice(event.getUserLogin());
         entity.setPrice(0d);
         invoiceService.saveInvoice(entity);
